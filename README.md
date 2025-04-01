@@ -1,31 +1,51 @@
-TP : Application CRUD avec React JS
+```markdown
+# TP : Application CRUD Clients avec Vite + React (JSX)
 
-## Objectif
-Créer une application React JS permettant de gérer des clients avec les fonctionnalités CRUD (Create, Read, Update, Delete) en utilisant JSON Server comme backend simulé.
+## Objectifs
+Développer une application SPA (Single Page Application) de gestion de clients avec les fonctionnalités CRUD en utilisant :
+- Vite comme outil de build
+- React avec des composants en `.jsx`
+- JSON Server pour l'API mock
+- React Router pour la navigation
+- Axios pour les requêtes HTTP
 
 ## Prérequis
-- Node.js installé (version 16 ou supérieure)
-- Éditeur de code (VS Code recommandé)
-- Connaissances de base en JavaScript et React
+- Node.js (v18+ recommandé)
+- npm (inclus avec Node.js)
+- VS Code (ou autre éditeur)
 
 ## Installation
 
-1. **Installer Node.js**  
-   Téléchargez et installez Node.js depuis [https://nodejs.org/](https://nodejs.org/).
+1. **Créer le projet avec Vite** :
+```bash
+npm create vite@latest crud-client -- --template react
+cd crud-client
+npm install
+```
 
-2. **Créer une application React**  
-   Exécutez les commandes suivantes dans votre terminal :
+2. **Installer les dépendances** :
+```bash
+npm install axios react-router-dom json-server
+```
 
-   npx create-react-app crud_app
-   cd crud_app
-   npm start
-   
-Installer JSON Server
-Pour simuler une API REST, installez JSON Server : npm install -g json-server
+## Structure du projet
+```
+src/
+├── components/
+│   ├── ClientList.jsx
+│   ├── ClientDetails.jsx
+│   ├── CreateClient.jsx
+│   └── UpdateClient.jsx
+├── App.jsx
+├── main.jsx
+├── db.json (à créer)
+```
 
-Créer un fichier db.json
-À la racine du projet, créez un fichier db.json avec les données des clients :
+## Configuration
 
+1. **JSON Server** :
+Créez `db.json` à la racine :
+```json
 {
   "clients": [
     {
@@ -33,92 +53,149 @@ Créer un fichier db.json
       "nom": "Client 1",
       "adresse": "Adresse 1",
       "tel": "123456789"
-    },
-    {
-      "id": 2,
-      "nom": "Client 2",
-      "adresse": "Adresse 2",
-      "tel": "987654321"
     }
   ]
 }
-Démarrer JSON Server
-Lancez le serveur dans un terminal séparé : json-server --watch db.json --port 3001
+```
 
-Installer les dépendances
-Installez les bibliothèques nécessaires : npm install axios react-router-dom bootstrap
+Lancez le serveur :
+```bash
+npx json-server --watch db.json --port 3001
+```
 
-Structure des composants
-ClientsList.jsx : Affiche la liste des clients et permet la suppression.
-
-ClientDetails.jsx : Affiche les détails d'un client.
-
-CreateClient.jsx : Formulaire pour ajouter un nouveau client.
-
-UpdateClient.jsx : Formulaire pour modifier un client existant.
-
-Routes
-Configurez les routes dans App.jsx :
-
-javascript
-Copy
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import ClientsList from './components/ClientsList';
-import ClientDetails from './components/ClientDetails';
-import CreateClient from './components/CreateClient';
-import UpdateClient from './components/UpdateClient';
+2. **Routes principales** (`App.jsx`) :
+```jsx
+import { BrowserRouter, Routes, Route } from 'react-router-dom'
+import ClientList from './components/ClientList'
+import CreateClient from './components/CreateClient'
+import ClientDetails from './components/ClientDetails'
+import UpdateClient from './components/UpdateClient'
 
 function App() {
   return (
-    <Router>
+    <BrowserRouter>
       <Routes>
-        <Route path="/clients" element={<ClientsList />} />
-        <Route path="/clients/create" element={<CreateClient />} />
-        <Route path="/clients/:id" element={<ClientDetails />} />
-        <Route path="/clients/:id/update" element={<UpdateClient />} />
+        <Route path="/" element={<ClientList />} />
+        <Route path="/create" element={<CreateClient />} />
+        <Route path="/:id" element={<ClientDetails />} />
+        <Route path="/:id/update" element={<UpdateClient />} />
       </Routes>
-    </Router>
-  );
+    </BrowserRouter>
+  )
 }
+```
 
-export default App;
-Fonctionnalités implémentées
-Create : Ajout d'un nouveau client via CreateClient.jsx.
+## Composants clés
 
-Read : Affichage de la liste des clients (ClientsList.jsx) et des détails (ClientDetails.jsx).
+### ClientList.jsx
+```jsx
+import { useState, useEffect } from 'react'
+import { Link, useNavigate } from 'react-router-dom'
+import axios from 'axios'
 
-Update : Modification d'un client existant via UpdateClient.jsx.
+export default function ClientList() {
+  const [clients, setClients] = useState([])
+  const navigate = useNavigate()
 
-Delete : Suppression d'un client depuis ClientsList.jsx.
+  useEffect(() => {
+    fetchClients()
+  }, [])
 
-Style avec Bootstrap
-Importez Bootstrap dans App.jsx pour styliser l'application :
+  const fetchClients = async () => {
+    const res = await axios.get('http://localhost:3001/clients')
+    setClients(res.data)
+  }
 
-import 'bootstrap/dist/css/bootstrap.min.css';
-Exemple d'utilisation :
+  const handleDelete = async (id) => {
+    await axios.delete(`http://localhost:3001/clients/${id}`)
+    fetchClients()
+  }
 
-<button className="btn btn-success">Ajouter</button>
-<table className="table table-striped">
+  return (
+    <div>
+      <h1>Liste des clients</h1>
+      <Link to="/create">
+        <button>Nouveau client</button>
+      </Link>
+      
+      <table>
+        {/* Affichage des clients */}
+      </table>
+    </div>
+  )
+}
+```
 
-Lancement de l'application
+### CreateClient.jsx
+```jsx
+import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
+import axios from 'axios'
 
-Démarrez JSON Server :"json-server --watch db.json --port 3001"
+export default function CreateClient() {
+  const [client, setClient] = useState({ nom: '', adresse: '', tel: '' })
+  const navigate = useNavigate()
 
-Démarrez l'application React : "npm start"
-Accédez à l'application via [localhost:3000/clients](http://localhost:5174/clients).
+  const handleSubmit = async (e) => {
+    e.preventDefault()
+    await axios.post('http://localhost:3001/clients', client)
+    navigate('/')
+  }
 
-Résultat attendu
-Une interface fonctionnelle permettant de gérer les clients.
+  return (
+    <form onSubmit={handleSubmit}>
+      {/* Champs du formulaire */}
+    </form>
+  )
+}
+```
 
-Des captures d'écran illustrant chaque étape dans un fichier PDF.
+## Lancement de l'application
 
-Un dossier src compressé contenant le code source.
+1. **Développement** :
+```bash
+npm run dev
+```
+Ouvrez [http://localhost:5173](http://localhost:5173)
 
-Évaluation
-Le tuteur évaluera :
+2. **Production** :
+```bash
+npm run build
+npm preview
+```
 
-Le respect des consignes.
+## Bonnes pratiques
 
-La qualité du code et de l'interface.
+1. **Structure des composants** :
+- Utiliser des composants fonctionnels
+- Nommer les fichiers en `.jsx`
+- Organiser le code en dossiers logiques
 
-La fonctionnalité complète de l'application.
+2. **Gestion d'état** :
+- `useState` pour l'état local
+- `useEffect` pour les effets secondaires
+- `useNavigate` pour la navigation
+
+3. **Stylisation** :
+Optionnel : Ajouter Tailwind CSS ou un autre framework
+```bash
+npm install -D tailwindcss postcss autoprefixer
+npx tailwindcss init
+```
+
+## Remise du TP
+
+1. Compresser le dossier du projet (sans `node_modules`)
+2. Inclure un PDF avec :
+   - Captures d'écran des différentes vues
+   - Explications des choix techniques
+
+## Ressources
+- [Documentation Vite](https://vitejs.dev/)
+- [React avec JSX](https://react.dev/learn/writing-markup-with-jsx)
+- [React Router v6](https://reactrouter.com/en/main)
+- [JSON Server](https://www.npmjs.com/package/json-server)
+- Boostrap
+``` 
+
+Ce README.md est adapté pour un projet utilisant Vite + React avec des composants en `.jsx`. Il inclut les spécificités de cette stack tout en conservant les objectifs pédagogiques du TP CRUD.
